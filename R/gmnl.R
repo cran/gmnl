@@ -193,16 +193,15 @@ gmnl <- function(formula, data, subset, weights, na.action,
   if ((model == "lc" || model == "mn") && Q < 2) stop("Classes cannot be lower than 2")
   
   if (model == "mnl"){
-    if (is.null(callT$method))      callT$method      <- 'nr'
+    if (is.null(callT$method)) callT$method <- 'nr'
   } else {
-    if (is.null(callT$method))      callT$method      <- 'bfgs'
+    if (is.null(callT$method)) callT$method <- 'bfgs'
   }
   
   ########################
   # 2) Check Model Frame
   ########################
   if(!inherits(data, "mlogit.data")) stop("Data must be of class mlogit.data")
-  
   mf <- callT
   m  <- match(c("formula", "data", "subset", "na.action", "weights"), names(mf), 0L)
   mf <- mf[c(1L, m)]
@@ -212,10 +211,11 @@ gmnl <- function(formula, data, subset, weights, na.action,
   
   ## Change the reference level
   if (!is.null(reflevel)) attr(mf, "index")[["alt"]] <- relevel(attr(mf, "index")[["alt"]], reflevel)
+  
+  ## Indeces
   index <- attr(mf, "index")
   alt   <- index[["alt"]]
   chid  <- index[["chid"]]
-  
   alt.lev <- levels(alt)
   J <- length(alt.lev)
   
@@ -232,7 +232,6 @@ gmnl <- function(formula, data, subset, weights, na.action,
   ##########################################
   # 3) Extract the elements of the model
   ##########################################
-  
   y <- model.response(mf)
   X <- model.matrix(formula, mf)
   
@@ -306,9 +305,9 @@ gmnl <- function(formula, data, subset, weights, na.action,
       }
     }
     if (model == "gmnl"){
-      ndist <- ranp[! (ranp %in% c("n", "u", "t"))]
+      ndist <- ranp[! (ranp %in% c("n", "u", "t", "ln"))]
       if (length(ndist) > 0){
-        udstr <- paste("Coefficients from G-MNL model can only be distributed as n, u or t")
+        udstr <- paste("Coefficients from G-MNL model can only be distributed as n, u, ln or t")
         stop(udstr)
       }
     }
@@ -450,7 +449,7 @@ gmnl <- function(formula, data, subset, weights, na.action,
       names(notscale) <- mean.names
     }
   }
-  if (model == "mixl" || model == "gmnl" || model == "mm"){
+  if ((model == "mixl" || model == "gmnl" || model == "mm") & is.null(start)){
     ln <- names(ranp[ranp == "ln"])
     sb <- names(ranp[ranp == "sb"])
     if (length(ln) != 0){
@@ -466,11 +465,13 @@ gmnl <- function(formula, data, subset, weights, na.action,
     }
     if (length(sb) != 0){
       if (model == "mixl" || model == "gmnl"){
-        theta[sb] <- exp(theta[sb]) / (1 + exp(theta[sb])) 
+        if (sum(theta[sb] < 0) >= 1)  stop("Some variables specified as sb have negative values in the clogit")
+        theta[sb] <- log(theta[sb])
       } else {
         sb.names <- c()
         for (i in 1:Q) sb.names <- c(sb.names, paste('class', i, sb, sep = '.'))
-        theta[sb.names] <- exp(theta[sb.names]) / (1 + exp(theta[sb.names])) 
+        if (sum(theta[sb.names] < 0) >= 1)  stop("Some variables specified as sb have negative values in the clogit")
+        theta[sb.names] <- log(theta[sb.names])
       }
     }
   }  
@@ -487,7 +488,7 @@ gmnl <- function(formula, data, subset, weights, na.action,
   
   ## Maximization control arguments
   m <- match(c('method', 'print.level', 'iterlim',
-               'start','tol', 'ftol', 'steptol', 'fixed'),
+               'start','tol', 'ftol', 'steptol', 'fixed', 'constraints'),
              names(opt), 0L)
   opt <- opt[c(1L, m)]
   
@@ -552,7 +553,8 @@ gmnl <- function(formula, data, subset, weights, na.action,
   betahat <- coef(x)
   opt$gradient <- FALSE
   opt$get.bi <- TRUE
-  opt$fixed <- opt$steptol <- opt$iterlim <- opt$method <- opt$print.level <- opt$tol <- opt$ftol <- opt$logLik <- opt$start <- NULL 
+  opt$fixed <- opt$steptol <- opt$iterlim <- opt$method <- opt$print.level <- opt$tol <- opt$ftol <- opt$logLik <- opt$start <- NULL
+  opt$constraints <- NULL
   if (model != "mnl"){
     opt[[1]] <- switch(model,
                        "smnl" = as.name('ll.smlogit'),

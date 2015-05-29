@@ -14,7 +14,7 @@ suml <- function(x){
     }
   }
   else{
-    s <- rep(0,length(x[[n]]))
+    s <- rep(0, length(x[[n]]))
     for (i in 1:n){
       x[[i]][is.na(x[[i]])] <- 0
       s <- s + x[[i]]
@@ -42,8 +42,8 @@ ll.mlogit <- function(theta, y, X, gradient = TRUE,
   if (is.null(weights)) weights <- 1
   exb  <- lapply(X, function(x) exp(crossprod(t(x), theta)))
   sexb <- suml(exb)
-  Pni  <- lapply(exb, function(x){v <- x / sexb ; 
-                                  v[is.na(v)] <- 0 ;
+  Pni  <- lapply(exb, function(x){v <- x / sexb; 
+                                  v[is.na(v)] <- 0;
                                   as.vector(v)})
   Pn <- Reduce("+", mapply("*", Pni, y, SIMPLIFY = FALSE))
   ll <- sum(log(Pn) * weights) 
@@ -97,7 +97,8 @@ ll.smlogit <- function(theta, y, X, H = NULL, id = NULL, R,
   
   ## Make random draws
   set.seed(seed)
-  epsilon <- if (typeR) truncnorm::rtruncnorm(R * ifelse(panel, n, N), a = - bound.err, b = bound.err) else Make.epsi(R * ifelse(panel, n, N), bound.err)
+  epsilon <- if (typeR) truncnorm::rtruncnorm(R * ifelse(panel, n, N), a = - bound.err, b = bound.err) 
+             else Make.epsi(R * ifelse(panel, n, N), bound.err)
   sigmaM  <- exp(tau * matrix(epsilon, ncol = ifelse(panel, n, N))) 
   sum.se  <- apply(sigmaM * matrix(epsilon, ncol = ifelse(panel, n, N)), 1, sum) 
   p.se    <- sum.se / apply(sigmaM, 1, sum) 
@@ -634,7 +635,7 @@ ll.mlogitlc <- function(theta, y, X, H, Q, id = NULL, weights = NULL,
     attr(lnL, "prob.alt") <- sapply(Pw, function(x) apply(x, 1, sum))
     attr(lnL, "prob.ind") <- Ln
     attr(lnL, "bi") <- bi
-    attr(lnL, 'Qir') <- Qnr
+    attr(lnL, 'Qir') <- Qnr # WPnq / Ln
   }
   lnL 
 }
@@ -678,6 +679,8 @@ ll.mnlogit <- function(theta, y, X, H, Q,
   for (j in 1:J) XBr[[j]] <- array(NA, dim = c(N, R, Q))
   nind <- ifelse(panel, n, N)
   if (panel) theIds <- unique(id)
+  if (get.bi) bi <- array(NA, dim = c(nind, R, Q, K), 
+                          dimnames = list(NULL, NULL, NULL, colnames(X[[1]]))) 
   for (i in 1:nind){
     if (panel){
       anid <- theIds[i]
@@ -690,6 +693,7 @@ ll.mnlogit <- function(theta, y, X, H, Q,
       for (j in 1:J) {
         XBr[[j]][theRows, , q] <- crossprod(t(X[[j]][theRows, , drop = FALSE]), bq$br) 
       }
+      if (get.bi) bi[i,, q,] <- t(bq$br)
     } 
   }
   
@@ -701,7 +705,7 @@ ll.mnlogit <- function(theta, y, X, H, Q,
   Pnq <- apply(Pnrq, c(1, 3), mean)
   WPnq <- Wnq * Pnq 
   Ln   <- apply(WPnq, 1, sum)
-  #if (get.bi)  Qnq  <-  aperm(repmat(WPnq / Ln, dim = c(1, 1, R)), c(1, 3, 2)) * Pnrq # n * R * Q
+  if (get.bi)  Qir <- list(wnq = Wnq, Ln = Ln, Pnrq = Pnrq)
   lnL <- if (panel) sum(log(Ln) * weights[!duplicated(id)]) else sum(log(Ln) * weights)
   
   ## Gradient
@@ -773,8 +777,8 @@ ll.mnlogit <- function(theta, y, X, H, Q,
     Pw <- lapply(Pnjq, function(x) x * Wnq)
     attr(lnL, "prob.alt") <- sapply(Pw, function(x) apply(x, 1, sum))
     attr(lnL, "prob.ind") <- Ln
-    attr(lnL, "bi") <- NULL
-    attr(lnL, 'Qir') <- NULL
+    attr(lnL, "bi") <- bi
+    attr(lnL, 'Qir') <- Qir
   }
   lnL
 }

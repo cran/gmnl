@@ -26,7 +26,7 @@ summary.gmnl <- function(object,...){
   z <- b / std.err
   p <- 2 * (1 - pnorm(abs(z)))
   CoefTable <- cbind(b, std.err, z, p)
-  colnames(CoefTable) <- c("Estimate", "Std. Error", "t-value", "Pr(>|t|)")
+  colnames(CoefTable) <- c("Estimate", "Std. Error", "z-value", "Pr(>|z|)")
   object$CoefTable    <- CoefTable
   class(object) <- c("summary.gmnl", "gmnl")
   return(object)
@@ -60,13 +60,44 @@ print.summary.gmnl <- function(x, digits = max(3, getOption("digits") - 2),
   invisible(x)
 }
 
-#' @rdname gmnl
+#' vcov method for gmnl objects
+#' 
+#' The \code{vcov} method for \code{gmnl} objects extracts the covariance matrix of the coefficients or the random parameters. It also allows to get the standard errors for the variance-covariance matrix of the random parameters
+#' 
+#' @param object a fitted model of class \code{gmnl},
+#' @param what indicates which covariance matrix has to be extracted. The default is \code{coefficient}, in this case the \code{vcov} behaves as usual. If \code{what = "ranp"} the covariance matrix of the random parameters is returned as default, 
+#' @param type if the model is estimated with random parameters, then this argument indicates what matrix should be returned. If \code{type = "cov"}, then the covariance matrix of the random parameters is returned; if \code{type = "cor"} then the correlation matrix of the random parameters is returned; if \code{type = "sd"} then the standard deviation of the random parameters is returned,
+#' @param se if \code{TRUE} \code{type = "cov"} then the standard error of the covariance matrix of the random parameters is returned; if \code{TRUE} \code{type = "sd"} the standard error of the standard deviation of the random parameter is returned. This argument if valid only if the model is estimated using correlated random parameters,
+#' @param Q this argument is only valid if the "\code{mm}" (MM-MNL) model is estimated. It indicates the class for which the variance-covariance matrix is computed,
+#' @param digits number of digits,
+#' @param ... further arguments
+#' @details This new interface replaces the \code{cor.gmnl}, \code{cov.gmnl} and \code{se.cov.gmnl} functions which are deprecated.
+#' @seealso \code{\link[gmnl]{gmnl}} for the estimation of multinomial logit models with random parameters.
+#' @method vcov gmnl
 #' @export
-vcov.gmnl <- function(object,...){
-  H    <- object$logLik$hessian
-  vcov <- solve(- H)
-  rownames(vcov) <- colnames(vcov) <- names(coef(object))
-  return(vcov)
+vcov.gmnl <- function(object, what = c('coefficient', 'ranp'), type = c('cov', 'cor', 'sd'), 
+                      se =  FALSE, Q = NULL, digits = max(3, getOption("digits") - 2),...)
+{
+  what <- match.arg(what)
+  type <- match.arg(type)
+  if (what == 'coefficient'){
+    H    <- object$logLik$hessian
+    vcov <- solve(- H)
+    rownames(vcov) <- colnames(vcov) <- names(coef(object))
+    return(vcov)
+  }
+  if (what == 'ranp'){
+    if (se){
+      if (type == 'cov') se.cov.gmnl(object, sd = FALSE, Q = Q, digits = digits)
+      if (type == 'sd')  se.cov.gmnl(object, sd = TRUE, Q = Q,  digits = digits)
+      if (type == 'cor') stop("standard error for correlation coefficients not implemented yet")
+    } else {
+      if (type == 'cov') print(cov.gmnl(object, Q = Q)) 
+      if (type == 'cor') print(cor.gmnl(object, Q = Q))
+      if (type == 'sd')  print(sqrt(diag(cov.gmnl(object, Q))))
+    }
+
+  }
 }
 
 #' @rdname gmnl
@@ -315,47 +346,76 @@ nObs.gmnl <- function(x, ... ){
 effect.gmnl <- function(x, par = NULL, effect = c("ce", "wtp"), wrt = NULL, ... ){
   if(!inherits(x, "gmnl")) stop("not a \"gmnl\" object")
   model <- x$model
-  if (model == "mm") stop("Individual's parameter for \"mm\" model not supported yet")
   if (model == "mnl") stop("This function is valid only for models with individual heterogeneity")
   type <- match.arg(effect)
   ranp <- x$ranp
-  if (model != "lc" && !is.null(par) && !(par %in% names(ranp))) stop("This parameter is not random: ", par)
+  #if (model != "lc" && !is.null(par) && !(par %in% names(ranp))) stop("This parameter is not random: ", par)
+  #if (model != "lc" ||  model!= "smnl") if (!(par %in% names(ranp))) stop("This parameter is not random: ", par)
+  if (type == "wtp" & is.null(wrt)) stop("you need to specify wrt")
   bi   <- x$bi
-  Qir  <- x$Qir
-  R    <- ncol(Qir)
-  N    <- nrow(Qir)
-  if (model == "lc") K <- ncol(bi) else K <- dim(bi)[[3]]
-  
-  mean <- mean.sq <- array(NA, dim = c(N, R, K))
-  for (j in 1:K){
-    if (type == "wtp") {
-      # Check if wrt is fixed or random
-      if (is.null(wrt)) stop("you need to specify wrt")
-      if (model != "lc"){
-        if (model  == "smnl") {
-          gamma <- bi[, , wrt]
-        } else {
-          is.ran <- any(names(ranp) %in% wrt)
-          gamma <- if (is.ran) bi[, , wrt] else coef(x)[wrt]
-        }   
-      } else gamma <- coef(x)[wrt]
-      mean[, , j]    <- (bi[, , j] / gamma)   * Qir 
-      mean.sq[, , j] <- ((bi[, , j] / gamma) ^ 2) * Qir 
-    } else {
-      if (model == "lc"){
-        mean[, , j] <- repRows(bi[, j], N) * Qir
-        mean.sq[, , j] <- (repRows(bi[, j], N) ^2) * Qir 
-      } else {
-        mean[, , j]    <- bi[, , j] * Qir 
-        mean.sq[, , j] <- (bi[, , j] ^ 2) * Qir
+  Qir <- x$Qir
+  if (model == "mixl" || model == "gmnl" || model == "smnl"){
+    N <- nrow(Qir)
+    K <- dim(bi)[[3]]
+    var_coefn <- dimnames(bi)[[3]]
+    mean <- mean.sq <- matrix(NA, N, K)
+    if (type == "wtp"){
+      if (model != "smnl"){
+        is.ran <- any(names(ranp) %in% wrt)
+        gamma <- if (is.ran) bi[, , wrt] else coef(x)[wrt]
+      } else gamma <- bi[, , wrt]
+      for (j in 1:K){
+        mean[, j]    <- rowSums((bi[, , j] / gamma)   * Qir)
+        mean.sq[, j] <- rowSums(((bi[, , j] / gamma) ^ 2) * Qir)
       }
-
+    } else {
+      for (j in 1:K){
+        mean[, j]    <-  rowSums(bi[, , j] * Qir)
+        mean.sq[, j] <-  rowSums(bi[, , j]^2 * Qir) 
+      }
     }
   }
-  mean    <- apply(mean,  c(1,3), sum)
-  mean.sq <- apply(mean.sq, c(1,3), sum)
+  if (model == "lc"){
+    N <- nrow(Qir)
+    K <- ncol(bi)
+    var_coefn <- colnames(bi)
+    mean <- mean.sq <- matrix(NA, N, K)
+    if (type == "wtp"){
+      gamma <- bi[, wrt]
+      for (j in 1:K){
+        mean[, j]    <- rowSums(repRows(bi[, j] / gamma, N) * Qir)
+        mean.sq[, j] <- rowSums(repRows((bi[, j] / gamma)^2, N) * Qir)
+      }
+    } else {
+      for (j in 1:K){
+        mean[, j]    <- rowSums(repRows(bi[, j], N)   * Qir) 
+        mean.sq[, j] <- rowSums(repRows(bi[, j]^2, N) * Qir) 
+      }
+    }
+  }
+  if (model == "mm"){
+    wnq  <- Qir$wnq
+    Ln   <- Qir$Ln
+    Pnrq <- Qir$Pnrq
+    N <- length(Ln)
+    K <- dim(bi)[[4]]
+    mean <- mean.sq <- matrix(NA, N, K)
+    var_coefn <- dimnames(bi)[[4]]
+    if (type == "wtp"){
+      gamma <- bi[,,,wrt]
+      for (j in 1:K){
+        mean[, j]    <- rowSums(wnq * apply((bi[,,,j] / gamma)   * Pnrq, c(1, 3), mean) / Ln)
+        mean.sq[, j] <- rowSums(wnq * apply((bi[,,,j] / gamma)^2 * Pnrq, c(1, 3), mean) / Ln)
+      }
+    } else {
+      for (j in 1:K){
+        mean[, j]    <- rowSums(wnq * apply(bi[,,,j]   * Pnrq, c(1, 3), mean) / Ln)
+        mean.sq[, j] <- rowSums(wnq * apply(bi[,,,j]^2 * Pnrq, c(1, 3), mean) / Ln)
+      }
+    }
+  }
   sd.est  <- suppressWarnings(sqrt(mean.sq - mean ^ 2))
-  colnames(mean) <- colnames(mean.sq) <- colnames(sd.est) <- if(model == "lc") colnames(bi) else dimnames(bi)[[3]]
+  colnames(mean) <- colnames(sd.est) <- var_coefn
   if (!is.null(par)){
     mean   <- mean[, par]
     sd.est <- sd.est[, par]

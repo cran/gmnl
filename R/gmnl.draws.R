@@ -54,7 +54,7 @@ make.draws <- function(R, Ka, haltons){
 
 ## Make Lower Triangular
 makeL <- function(x){
-  K <- (-1+sqrt(1 + 8 * length(x)))/2
+  K <- (-1 + sqrt(1 + 8 * length(x))) / 2
   mat <- matrix(0, K, K)
   mat[lower.tri(mat, diag = TRUE)] <- x
   mat
@@ -255,7 +255,7 @@ MakeGcoef <- function(beta, stds = NULL, ranp, omega = NULL, correlation = FALSE
         } else {
           d.gamma[j, ] <- (exp(gamma) / (1 + exp(gamma))^2) * Lomega[j, ] * (1 - sigma.nr)
         }
-        if (!is.null(Hb)) d.het[j, ] <- beta[j] * sigma.nr
+        if (!is.null(Hb)) d.het[j, ] <- beta[j] * sigma.nr + (1 - gamexp) * sigma.nr * Lomega[j, ]
         d.stds[picksig, ] <- d.stds[picksig, ] * (gamexp + ((1 - gamexp) * repRows(sigma.nr, length(picksig))))
       } else {
         br[j, ] <- beta[j] + Lomega[j, ]
@@ -274,6 +274,7 @@ MakeGcoef <- function(beta, stds = NULL, ranp, omega = NULL, correlation = FALSE
       distr <- ranp[var]
       draws <- switch(distr,
                       "n" = omega[var, ],
+                      "ln" = omega[var, ],
                       "t" = { etauni <- pnorm(omega[var,, drop = F])
                               eta05  <- etauni < 0.5
                               eta05 * (sqrt(2 * etauni) - 1) + !eta05 * (1 - sqrt(2 * (1 - etauni)))
@@ -289,8 +290,17 @@ MakeGcoef <- function(beta, stds = NULL, ranp, omega = NULL, correlation = FALSE
         } else {
           d.gamma[var, ] <- (exp(gamma) / (1 + exp(gamma))^2) * stds[var] * draws * (1 - sigma.nr)
         }
-        if (!is.null(Hb)) d.het[var, ] <- beta[var] * sigma.nr
+        #if (!is.null(Hb)) d.het[var, ] <- beta[var] * sigma.nr
+        if (!is.null(Hb)) d.het[var, ] <- beta[var] * sigma.nr + (1 - gamexp) * sigma.nr * stds[var] * draws
         d.stds[var, ]  <-  draws * (gamexp + ((1 - gamexp) * sigma.nr))
+        if (distr == "ln"){
+         br[var, ] <- exp(br[var, , drop = FALSE])
+         d.mu[var, ] <- br[var, ] * d.mu[var, ]
+         d.tau[var, ] <- br[var, ] * d.tau[var, ] 
+         d.gamma[var, ] <- br[var, ] * d.gamma[var, ] 
+         d.stds[var, ] <-  br[var, ] * d.stds[var, ]
+         if (!is.null(Hb)) d.het[var, ] <- br[var, ] * d.het[var, ]
+        }
       } else {
         br[var, ] <- beta[var] + stds[var] * draws
         d.mu[var, ]    <- 1
@@ -298,6 +308,11 @@ MakeGcoef <- function(beta, stds = NULL, ranp, omega = NULL, correlation = FALSE
         d.gamma[var, ] <- 0
         if (!is.null(Hb)) d.het[var, ] <- 0
         d.stds[var, ]  <- draws
+        if (distr == "ln"){
+          br[var, ] <- exp(br[var, , drop = FALSE])
+          d.mu[var, ] <- br[var, ]
+          d.stds[var, ] <- br[var, ] * d.stds[var, ]
+        }
       }
     }
   }
