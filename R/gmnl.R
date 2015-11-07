@@ -84,7 +84,7 @@
 #' \item Train, K. (2009). Discrete choice methods with simulation. Cambridge University Press.
 #' }
 #' @author Mauricio Sarrias \email{msarrias86@@gmail.com}
-#' @import Formula maxLik truncnorm
+#' @import Formula maxLik truncnorm stats
 #' @importFrom mlogit mlogit.data
 #' @export
 #' @examples
@@ -165,7 +165,7 @@
 #'                  seas = "n"),
 #'                  Q = 2,
 #'                  iterlim = 500)
-#' summary(Elec.mm)                                                                                                                                                                                                                                         
+#' summary(Elec.mm)
 #' }
 gmnl <- function(formula, data, subset, weights, na.action,
                  model = c("mnl", "mixl","smnl", "gmnl", "lc", "mm"),
@@ -192,7 +192,7 @@ gmnl <- function(formula, data, subset, weights, na.action,
   if (model == "mm" && !has.rand)  stop("mn model needs ranp to be specified")
   if ((model == "lc" || model == "mn") && Q < 2) stop("Classes cannot be lower than 2")
   
-  if (model == "mnl"){
+  if (model == "mnl") {
     if (is.null(callT$method)) callT$method <- 'nr'
   } else {
     if (is.null(callT$method)) callT$method <- 'bfgs'
@@ -201,7 +201,7 @@ gmnl <- function(formula, data, subset, weights, na.action,
   ########################
   # 2) Check Model Frame
   ########################
-  if(!inherits(data, "mlogit.data")) stop("Data must be of class mlogit.data")
+  if (!inherits(data, "mlogit.data")) stop("Data must be of class mlogit.data")
   mf <- callT
   m  <- match(c("formula", "data", "subset", "na.action", "weights"), names(mf), 0L)
   mf <- mf[c(1L, m)]
@@ -220,13 +220,15 @@ gmnl <- function(formula, data, subset, weights, na.action,
   J <- length(alt.lev)
   
   ## Check Panel
-  if (panel){
+  if (panel) {
     if (model == "mnl") stop("Panel is not relevant for mnl model")
     id <- index[["id"]]
     if (is.null(id)) stop("No individual index")
     id <- split(index[["id"]], alt)[[1]]
   } else{
-    id <- NULL
+    #id <- NULL
+    # This does not confuse the code when the data has id.var but the model is panel = FALSE
+    id <- attr(mf, "index")[["id"]] <- NULL
   }
   
   ##########################################
@@ -237,19 +239,19 @@ gmnl <- function(formula, data, subset, weights, na.action,
   
   ## Check variables for the mean and/or heterogeneity
   has.mvar <- has.othervar(formula, 4)
-  if(has.mvar){
+  if (has.mvar){
     if (model == "mnl" || model == "smnl") stop(paste("Variables for mean are not relevant for", paste(model, collapse = ": ")))
     if (is.null(mvar))  stop("mvar is null")
     if (!is.list(mvar)) stop("mvar is not a list")
-    rvar <- names(mvar)[! (names(mvar) %in% names(ranp))]
-    if (length(rvar) > 0){
+    rvar <- names(mvar)[!(names(mvar) %in% names(ranp))]
+    if (length(rvar) > 0) {
       udstr <- paste("The following variables are not specified in the argument ranp:", paste(unique(rvar), collapse = ", "))
       stop(udstr)
     }
     Z <- model.matrix(formula, mf, rhs = 4) 
-    for (i in 1:length(mvar)){
-      rvar <- mvar[[i]][! (mvar[[i]] %in% colnames(Z))]
-      if(length(rvar) > 0){
+    for (i in 1:length(mvar)) {
+      rvar <- mvar[[i]][!(mvar[[i]] %in% colnames(Z))]
+      if (length(rvar) > 0) {
         udstr <- paste("The following variables are not specified in the formula: ", paste(unique(rvar), collapse = ", "))
         stop(udstr)
       }
@@ -258,13 +260,13 @@ gmnl <- function(formula, data, subset, weights, na.action,
   
   has.het <- has.othervar(formula, 5)
   if ((model == "lc" || model == "mm") && !has.het) stop("lc needs variables for class probabilities")
-  if(has.het){
+  if (has.het){
     if (model == "mnl" || model == "mixl") stop(paste("variables for scale are not relevant for", paste(model, collapse = ": ")))
     if (model == "lc" || model == "mm") H <- model.matrix(formula, mf, rhs = 5, Q = Q) else H <- model.matrix(formula, mf, rhs = 5) 
   } else H <- NULL
   
   # Weights
-  if (any(names(mf)=="(weights)")){
+  if (any(names(mf) == "(weights)")) {
     weights <- mf[["(weights)"]] <- mf[["(weights)"]]/mean(mf[["(weights)"]])
     weights <- split(weights, alt)[[1]]
   } else weights <- NULL
@@ -274,7 +276,7 @@ gmnl <- function(formula, data, subset, weights, na.action,
   # List of Variables
   Xl <- vector(length = J, mode = "list")
   names(Xl) <- levels(alt)
-  for (i in levels(alt)){
+  for (i in levels(alt)) {
     Xl[[i]] <- X[alt == i, , drop = FALSE]
   }
   yl <- split(y, alt)
@@ -290,49 +292,49 @@ gmnl <- function(formula, data, subset, weights, na.action,
   
   ## Standard deviation of random parameters
   names.stds <- start.stds <- c()
-  if(has.rand){
-    if (!correlation){
-      ndist <- ranp[! (ranp %in% c("cn", "ln", "n", "u", "t", "sb"))]
-      if (length(ndist) > 0){
+  if(has.rand) {
+    if (!correlation) {
+      ndist <- ranp[!(ranp %in% c("cn", "ln", "n", "u", "t", "sb"))]
+      if (length(ndist) > 0) {
         udstr <- paste("unknown distribution", paste(unique(ndist), collapse = ", "))
         stop(udstr)
       }
     } else {
-      ndist <- ranp[! (ranp %in% c("cn", "ln", "n"))]
-      if (length(ndist) > 0){
+      ndist <- ranp[!(ranp %in% c("cn", "ln", "n"))]
+      if (length(ndist) > 0) {
         udstr <- paste("Correlated parameters is suitable for distribution from normal, such as cn, ln or n")
         stop(udstr)
       }
     }
-    if (model == "gmnl"){
-      ndist <- ranp[! (ranp %in% c("n", "u", "t", "ln"))]
-      if (length(ndist) > 0){
+    if (model == "gmnl") {
+      ndist <- ranp[!(ranp %in% c("n", "u", "t", "ln"))]
+      if (length(ndist) > 0) {
         udstr <- paste("Coefficients from G-MNL model can only be distributed as n, u, ln or t")
         stop(udstr)
       }
     }
     namesX <- colnames(X)
     novar <- names(ranp)[!((names(ranp) %in% namesX))]
-    if (length(novar) > 0 ){
+    if (length(novar) > 0 ) {
       uvar <- paste("The following random variables are not in the data: ", paste(unique(novar), collapse = ", "))
       stop(uvar)
     }
     Vara <- sort(match(names(ranp), namesX)) 
-    Varc <- (1:ncol(X))[- Vara]
+    Varc <- (1:ncol(X))[-Vara]
     fixed <- !(length(Varc) == 0)
     Xa   <- lapply(Xl, function(x) x[, Vara, drop = F])                        
     Xc   <- lapply(Xl, function(x) x[, Varc, drop = F]) 
-    allX <- if(fixed) mapply(cbind, Xc, Xa, SIMPLIFY = FALSE) else  Xa
+    allX <- if (fixed) mapply(cbind, Xc, Xa, SIMPLIFY = FALSE) else  Xa
     mean.names <- colnames(allX[[1]])
     nrap  <- length(Vara)
-    if (!correlation){
+    if (!correlation) {
       names.stds <- paste("sd", namesX[Vara], sep = ".")
       start.stds <- rep(.1, nrap)
       names(start.stds) <- names.stds
     } else {
       names.stds <- c()
       Ka <- length(ranp)
-      for (i in 1:Ka){
+      for (i in 1:Ka) {
         names.stds <- c(names.stds,
                         paste('sd', names(ranp)[i], names(ranp)[i:Ka], sep = '.'))
         start.stds <- rep(.1, .5 * nrap * (nrap + 1))
@@ -346,14 +348,14 @@ gmnl <- function(formula, data, subset, weights, na.action,
   
   ## Heterogeneity in scale or Class variables
   names.het <- start.het <- c()
-  if (has.het){
-    if (model == "lc" | model == "mm"){
+  if (has.het) {
+    if (model == "lc" | model == "mm") {
       start.het <- rep(0, ncol(H))
       names.het <- colnames(H)
       classes <- attr(H, "alt")
       Hl <- vector(length = Q, mode = "list")
       names(Hl) <- levels(classes)
-      for (i in levels(classes)){
+      for (i in levels(classes)) {
         Hl[[i]] <- H[classes == i, , drop = FALSE]
       }
     } else {
@@ -365,23 +367,23 @@ gmnl <- function(formula, data, subset, weights, na.action,
   
   ## Heterogeneity in mean
   names.phi <- start.phi <- c()
-  if (has.mvar){
+  if (has.mvar) {
     names.phi <- unlist(lapply(names(mvar), function(x) outer(x, mvar[[x]], FUN = paste, sep = ".")))
     start.phi <- rep(0, length(names.phi))
     names(start.phi) <- names.phi
   }
   
-  if (model == "lc"){
+  if (model == "lc") {
     lc.names <- c()
-    for (i in 1:Q){
+    for (i in 1:Q) {
       lc.names <- c(lc.names, paste('class', i, colnames(X), sep = '.'))
     }  
   }
   
-  if (model == "mm"){
+  if (model == "mm") {
     lc.names <- c()
     ls.names <- c()
-    for (i in 1:Q){
+    for (i in 1:Q) {
       lc.names <- c(lc.names, paste('class', i, colnames(X), sep = '.'))
       ls.names <- c(ls.names, paste('class', i, names.stds, sep = '.'))
     }  
@@ -395,7 +397,7 @@ gmnl <- function(formula, data, subset, weights, na.action,
   
   
   # If null start, estimate mean parameters from mnl
-  if (!is.null(start)){
+  if (!is.null(start)) {
     if (length(start) != length(allnames)) stop("Incorrect number of initial parameters")
     theta <- start
     names(theta) <- allnames
@@ -403,7 +405,7 @@ gmnl <- function(formula, data, subset, weights, na.action,
     K <- ncol(allX[[1]])
     theta <- rep(0, K)
     names(theta) <- mean.names
-    if (model != "mnl"){
+    if (model != "mnl") {
       # Estimate mean parameters from mnl
       calls <- call("maxLik")
       calls$start  <- theta
@@ -413,17 +415,17 @@ gmnl <- function(formula, data, subset, weights, na.action,
       calls$y <- as.name('yl')
       calls$logLik <- as.name('ll.mlogit')
       mean <- coef(eval(calls, sys.frame(which = nframe)))
-      if(model == "lc" || model == "mm"){
+      if (model == "lc" || model == "mm") {
         lc.mean <- c()
         init.shift <- seq(-0.02, 0.02, length.out = Q)
-        for(i in 1:Q){
+        for (i in 1:Q) {
           lc.mean <- c(lc.mean, mean + init.shift[i])
         }
       }
-      if (model  == "mm"){
+      if (model  == "mm") {
         ls.mean <- c()
         init.shift <- seq(-0.02, 0.02, length.out = Q)
-        for(i in 1:Q){
+        for(i in 1:Q) {
           ls.mean <- c(ls.mean, start.stds + init.shift[i])
         }
       }
@@ -437,8 +439,8 @@ gmnl <- function(formula, data, subset, weights, na.action,
     }
   }
   
-  if (model == "smnl" || model == "gmnl"){
-    if(!is.null(notscale)) {
+  if (model == "smnl" || model == "gmnl") {
+    if (!is.null(notscale)) {
       if (length(notscale) != ncol(X)) stop("Not scaled variables vector is not the same length as initial parameters")
       names(notscale) <- mean.names
       wns <- names(notscale[notscale == 1])
@@ -449,11 +451,11 @@ gmnl <- function(formula, data, subset, weights, na.action,
       names(notscale) <- mean.names
     }
   }
-  if ((model == "mixl" || model == "gmnl" || model == "mm") & is.null(start)){
+  if ((model == "mixl" || model == "gmnl" || model == "mm") & is.null(start)) {
     ln <- names(ranp[ranp == "ln"])
     sb <- names(ranp[ranp == "sb"])
-    if (length(ln) != 0){
-      if (model == "mixl" || model == "gmnl"){
+    if (length(ln) != 0) {
+      if (model == "mixl" || model == "gmnl") {
         if (sum(theta[ln] < 0) >= 1)  stop("Some variables specified as ln have negative values in the clogit")
         theta[ln] <- log(theta[ln])
       } else {
@@ -463,8 +465,8 @@ gmnl <- function(formula, data, subset, weights, na.action,
         theta[log.names] <- log(theta[log.names])
       }
     }
-    if (length(sb) != 0){
-      if (model == "mixl" || model == "gmnl"){
+    if (length(sb) != 0) {
+      if (model == "mixl" || model == "gmnl") {
         if (sum(theta[sb] < 0) >= 1)  stop("Some variables specified as sb have negative values in the clogit")
         theta[sb] <- log(theta[sb])
       } else {
@@ -475,7 +477,7 @@ gmnl <- function(formula, data, subset, weights, na.action,
       }
     }
   }  
-  if (print.init){
+  if (print.init) {
     cat("\nStarting Values:\n")
     print(theta)
   } 
@@ -504,19 +506,19 @@ gmnl <- function(formula, data, subset, weights, na.action,
   ##Gradient
   opt$gradient <- as.name('gradient') 
   
-  if (model == "smnl"){
+  if (model == "smnl") {
     cat("Estimating SMNL model", "\n")
     opt$logLik <- as.name('ll.smlogit')
     opt[c('R', 'seed', 'bound.err', 'id', 'H', 'notscale', 'typeR')] <- list(as.name('R'), as.name('seed'), as.name('bound.err'), as.name('id'), as.name('H'), as.name('notscale'), as.name('typeR'))
   }
-  if (model == "mixl"){
+  if (model == "mixl") {
     cat("Estimating MIXL model", "\n")
     opt$logLik <- as.name('ll.mixlog')
     opt[c('R', 'seed', 'ranp', 'id', 'Z','correlation', 'haltons', 'mvar')] <- 
       list(as.name('R'), as.name('seed'), as.name('ranp'), as.name('id'), as.name('Z'), as.name('correlation'), as.name('haltons'),
            as.name('mvar'))
   }
-  if (model == "gmnl"){
+  if (model == "gmnl") {
     cat("Estimating GMNL model", "\n")
     opt$logLik <- as.name('ll.gmlogit')
     hgamma <- match.arg(hgamma)
@@ -529,13 +531,13 @@ gmnl <- function(formula, data, subset, weights, na.action,
   if (is.null(weights)) weights <- 1
   opt$weights <- as.name('weights')
   
-  if (model == "lc"){
+  if (model == "lc") {
     cat("Estimating LC model", "\n")
     opt$logLik <- as.name('ll.mlogitlc')
     opt[c('H', 'Q', 'id')] <- list(as.name('Hl'), as.name('Q'), as.name('id'))
   }
   
-  if (model == "mm"){
+  if (model == "mm") { 
     cat("Estimating MM-MNL model", "\n")
     opt$logLik <- as.name('ll.mnlogit')
     opt[c('R', 'seed', 'ranp', 'id', 'H', 'correlation', 'haltons', 'Q')] <- 
@@ -555,16 +557,16 @@ gmnl <- function(formula, data, subset, weights, na.action,
   opt$get.bi <- TRUE
   opt$fixed <- opt$steptol <- opt$iterlim <- opt$method <- opt$print.level <- opt$tol <- opt$ftol <- opt$logLik <- opt$start <- NULL
   opt$constraints <- NULL
-  if (model != "mnl"){
+  if (model != "mnl") {
     opt[[1]] <- switch(model,
                        "smnl" = as.name('ll.smlogit'),
                        "mixl" = as.name('ll.mixlog'),
                        "gmnl" = as.name('ll.gmlogit'),
                        "lc"   = as.name('ll.mlogitlc'),
                        "mm"   = as.name('ll.mnlogit'))
-    if (has.rand){
-      if (!correlation){
-        if (model != "mm"){
+    if (has.rand) {
+      if (!correlation) {
+        if (model != "mm") {
           diag.sd <- paste("sd", namesX[Vara], sep = ".")
           betahat <- ifelse(names(betahat) %in% diag.sd, abs(betahat), betahat)
           names(betahat) <- names(coef(x))
@@ -619,7 +621,7 @@ gmnl <- function(formula, data, subset, weights, na.action,
                         logLik        = logLik,
                         mf            = mf,
                         formula       = formula,
-                        time          = proc.time()-start.time,
+                        time          = proc.time() - start.time,
                         freq          = freq,
                         draws         = haltons,
                         model         = model,

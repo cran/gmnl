@@ -4,9 +4,10 @@
 
 #' @rdname gmnl
 #' @method print gmnl
+#' @import stats
 #' @export
 print.gmnl <- function(x, digits = max(3, getOption("digits") - 3),
-                          width = getOption("width"),...){
+                          width = getOption("width"), ...){
   cat("\nCall:\n", deparse(x$call),"\n\n", sep = "")
   
   cat("\nCoefficients:\n")
@@ -19,6 +20,7 @@ print.gmnl <- function(x, digits = max(3, getOption("digits") - 3),
 
 #' @rdname gmnl
 #' @method summary gmnl
+#' @import stats
 #' @export
 summary.gmnl <- function(object,...){
   b <- object$coefficients
@@ -34,6 +36,7 @@ summary.gmnl <- function(object,...){
 
 #' @rdname gmnl
 #' @method print summary.gmnl
+#' @import stats
 #' @export
 print.summary.gmnl <- function(x, digits = max(3, getOption("digits") - 2),
                                   width = getOption("width"),
@@ -74,20 +77,21 @@ print.summary.gmnl <- function(x, digits = max(3, getOption("digits") - 2),
 #' @details This new interface replaces the \code{cor.gmnl}, \code{cov.gmnl} and \code{se.cov.gmnl} functions which are deprecated.
 #' @seealso \code{\link[gmnl]{gmnl}} for the estimation of multinomial logit models with random parameters.
 #' @method vcov gmnl
+#' @import stats
 #' @export
 vcov.gmnl <- function(object, what = c('coefficient', 'ranp'), type = c('cov', 'cor', 'sd'), 
-                      se =  FALSE, Q = NULL, digits = max(3, getOption("digits") - 2),...)
+                      se =  FALSE, Q = NULL, digits = max(3, getOption("digits") - 2), ...)
 {
   what <- match.arg(what)
   type <- match.arg(type)
-  if (what == 'coefficient'){
+  if (what == 'coefficient') {
     H    <- object$logLik$hessian
-    vcov <- solve(- H)
+    vcov <- solve(-H)
     rownames(vcov) <- colnames(vcov) <- names(coef(object))
     return(vcov)
   }
-  if (what == 'ranp'){
-    if (se){
+  if (what == 'ranp') {
+    if (se) {
       if (type == 'cov') se.cov.gmnl(object, sd = FALSE, Q = Q, digits = digits)
       if (type == 'sd')  se.cov.gmnl(object, sd = TRUE, Q = Q,  digits = digits)
       if (type == 'cor') stop("standard error for correlation coefficients not implemented yet")
@@ -102,8 +106,9 @@ vcov.gmnl <- function(object, what = c('coefficient', 'ranp'), type = c('cov', '
 
 #' @rdname gmnl
 #' @method update gmnl
+#' @import stats
 #' @export
-update.gmnl <- function (object, new, ...){
+update.gmnl <- function(object, new, ...){
   call <- object$call
   if (is.null(call))
     stop("need an object with call component")
@@ -143,7 +148,7 @@ model.response.gmnl <- function(object, ...){
 #' @rdname gmnl
 #' @export
 residuals.gmnl <- function(object, outcome = TRUE, ...){
-  if (!outcome){
+  if (!outcome) {
     result <- object$residuals
   }
   else{
@@ -155,7 +160,7 @@ residuals.gmnl <- function(object, outcome = TRUE, ...){
 }
 
 #' @rdname gmnl
-#' @export
+#' @import stats
 df.residual.gmnl <- function(object, ...){
   n <- length(residuals(object))
   K <- length(coef(object))
@@ -201,8 +206,9 @@ logLik.gmnl <- function(object,...){
 #' library(memisc)
 #' mtable("MNL 1"= mnl.1, "MNL 2" = mnl.2, 
 #'        summary.stats = c("N", "Log-likelihood", "BIC", "AIC"))
+#' @import stats
 #' @export getSummary.gmnl
-getSummary.gmnl <- function (obj, alpha = 0.05, ...){
+getSummary.gmnl <- function(obj, alpha = 0.05, ...){
   smry <- summary(obj)
   coef <- smry$CoefTable
   lower <- coef[, 1] - coef[, 2] * qnorm(alpha / 2)
@@ -231,15 +237,15 @@ getSummary.gmnl <- function (obj, alpha = 0.05, ...){
 #' @return A numeric value with the corresponding AIC or BIC value.
 #' @seealso \code{\link[gmnl]{gmnl}} for the estimation of multinomial logit models with observed and unobserved individual heterogeneity.
 #' 
-#' @importFrom stats AIC
+#' @import stats
 #' @method AIC gmnl
 #' @export
 AIC.gmnl <- function(object, ..., k = 2){
-  return(- 2 * object$logLik$maximum[[1]] + k * length(coef(object)))
+  return(-2 * object$logLik$maximum[[1]] + k * length(coef(object)))
 }
 
 #' @rdname AIC.gmnl
-#' @importFrom stats BIC
+#' @import stats
 #' @method BIC gmnl
 #' @export 
 #' @examples
@@ -271,6 +277,7 @@ BIC.gmnl <- function(object, ...){
 #' @references Zeileis A (2006), Object-oriented Computation of Sandwich 
 #' Estimators. Journal of Statistical Software, 16(9), 1--16.
 #' @method bread gmnl
+#' @import stats
 #' @export bread.gmnl
 bread.gmnl <- function(x, ... ){
   return( vcov( x ) * x$logLik$nobs)
@@ -316,6 +323,7 @@ nObs.gmnl <- function(x, ... ){
 #' \item Train, K. (2009). Discrete Choice Methods with Simulation. Cambridge University Press.
 #' }
 #' @seealso \code{\link[gmnl]{gmnl}} for the estimation of multinomial Logit models with individual parameters.
+#' @import stats
 #' @examples
 #' \dontrun{
 #' ## Data
@@ -344,7 +352,7 @@ nObs.gmnl <- function(x, ... ){
 #' summary(wtp.travel$sd.est)
 #' } 
 effect.gmnl <- function(x, par = NULL, effect = c("ce", "wtp"), wrt = NULL, ... ){
-  if(!inherits(x, "gmnl")) stop("not a \"gmnl\" object")
+  if (!inherits(x, "gmnl")) stop("not a \"gmnl\" object")
   model <- x$model
   if (model == "mnl") stop("This function is valid only for models with individual heterogeneity")
   type <- match.arg(effect)
@@ -354,46 +362,46 @@ effect.gmnl <- function(x, par = NULL, effect = c("ce", "wtp"), wrt = NULL, ... 
   if (type == "wtp" & is.null(wrt)) stop("you need to specify wrt")
   bi   <- x$bi
   Qir <- x$Qir
-  if (model == "mixl" || model == "gmnl" || model == "smnl"){
+  if (model == "mixl" || model == "gmnl" || model == "smnl") {
     N <- nrow(Qir)
     K <- dim(bi)[[3]]
     var_coefn <- dimnames(bi)[[3]]
     mean <- mean.sq <- matrix(NA, N, K)
-    if (type == "wtp"){
-      if (model != "smnl"){
+    if (type == "wtp") {
+      if (model != "smnl") {
         is.ran <- any(names(ranp) %in% wrt)
         gamma <- if (is.ran) bi[, , wrt] else coef(x)[wrt]
       } else gamma <- bi[, , wrt]
-      for (j in 1:K){
+      for (j in 1:K) {
         mean[, j]    <- rowSums((bi[, , j] / gamma)   * Qir)
         mean.sq[, j] <- rowSums(((bi[, , j] / gamma) ^ 2) * Qir)
       }
     } else {
-      for (j in 1:K){
+      for (j in 1:K) {
         mean[, j]    <-  rowSums(bi[, , j] * Qir)
-        mean.sq[, j] <-  rowSums(bi[, , j]^2 * Qir) 
+        mean.sq[, j] <-  rowSums(bi[, , j] ^ 2 * Qir) 
       }
     }
   }
-  if (model == "lc"){
+  if (model == "lc") {
     N <- nrow(Qir)
     K <- ncol(bi)
     var_coefn <- colnames(bi)
     mean <- mean.sq <- matrix(NA, N, K)
-    if (type == "wtp"){
+    if (type == "wtp") {
       gamma <- bi[, wrt]
-      for (j in 1:K){
+      for (j in 1:K) {
         mean[, j]    <- rowSums(repRows(bi[, j] / gamma, N) * Qir)
-        mean.sq[, j] <- rowSums(repRows((bi[, j] / gamma)^2, N) * Qir)
+        mean.sq[, j] <- rowSums(repRows((bi[, j] / gamma) ^ 2, N) * Qir)
       }
     } else {
-      for (j in 1:K){
+      for (j in 1:K) {
         mean[, j]    <- rowSums(repRows(bi[, j], N)   * Qir) 
-        mean.sq[, j] <- rowSums(repRows(bi[, j]^2, N) * Qir) 
+        mean.sq[, j] <- rowSums(repRows(bi[, j] ^ 2, N) * Qir) 
       }
     }
   }
-  if (model == "mm"){
+  if (model == "mm") {
     wnq  <- Qir$wnq
     Ln   <- Qir$Ln
     Pnrq <- Qir$Pnrq
@@ -401,22 +409,22 @@ effect.gmnl <- function(x, par = NULL, effect = c("ce", "wtp"), wrt = NULL, ... 
     K <- dim(bi)[[4]]
     mean <- mean.sq <- matrix(NA, N, K)
     var_coefn <- dimnames(bi)[[4]]
-    if (type == "wtp"){
+    if (type == "wtp") {
       gamma <- bi[,,,wrt]
-      for (j in 1:K){
+      for (j in 1:K) {
         mean[, j]    <- rowSums(wnq * apply((bi[,,,j] / gamma)   * Pnrq, c(1, 3), mean) / Ln)
-        mean.sq[, j] <- rowSums(wnq * apply((bi[,,,j] / gamma)^2 * Pnrq, c(1, 3), mean) / Ln)
+        mean.sq[, j] <- rowSums(wnq * apply((bi[,,,j] / gamma) ^ 2 * Pnrq, c(1, 3), mean) / Ln)
       }
     } else {
-      for (j in 1:K){
+      for (j in 1:K) {
         mean[, j]    <- rowSums(wnq * apply(bi[,,,j]   * Pnrq, c(1, 3), mean) / Ln)
-        mean.sq[, j] <- rowSums(wnq * apply(bi[,,,j]^2 * Pnrq, c(1, 3), mean) / Ln)
+        mean.sq[, j] <- rowSums(wnq * apply(bi[,,,j] ^ 2 * Pnrq, c(1, 3), mean) / Ln)
       }
     }
   }
   sd.est  <- suppressWarnings(sqrt(mean.sq - mean ^ 2))
   colnames(mean) <- colnames(sd.est) <- var_coefn
-  if (!is.null(par)){
+  if (!is.null(par)) {
     mean   <- mean[, par]
     sd.est <- sd.est[, par]
   }
@@ -456,6 +464,8 @@ effect.gmnl <- function(x, par = NULL, effect = c("ce", "wtp"), wrt = NULL, ... 
 #' @method plot gmnl
 #' @author Mauricio Sarrias
 #' @export 
+#' @import graphics
+#' @import stats
 #' @examples
 #' \dontrun{
 #' ## Examples using the Electricity data set from the mlogit package
@@ -494,22 +504,22 @@ plot.gmnl <- function(x, par = NULL, effect = c("ce", "wtp"), wrt = NULL,
   xlab <- switch(effect,
                  "wtp" = expression(E(hat(wtp[i]))),
                  "ce"  = expression(E(hat(beta[i])))) 
-  if (!ind){
+  if (!ind) {
     if (is.null(main)) main <- paste("Conditional Distribution for", par)
-    if (is.null(ylab)){
+    if (is.null(ylab)) {
       ylab <- switch(type,
                      "density"   = "Density",
                      "histogram" = "Frequency")
     }
     rpar <- effect.gmnl(x, par,  effect = effect, wrt =  wrt)$mean
-    if (type == "density"){
+    if (type == "density") {
       pdens <- density(rpar, adjust = adjust)
       plot(pdens, ylab = ylab, xlab = xlab, main = main, col = col)
       has.pos <- any(pdens$x > 0)
-      if (has.pos){
+      if (has.pos) {
         x1 <- min(which(pdens$x >= 0))  
         x2 <- max(which(pdens$x <  max(pdens$x)))
-        with(pdens, polygon(x = c(x[c(x1, x1:x2, x2)]), y= c(0, y[x1:x2], 0), col = col, border = NA))
+        with(pdens, polygon(x = c(x[c(x1, x1:x2, x2)]), y = c(0, y[x1:x2], 0), col = col, border = NA))
       }
     } else {
       minb <- round(min(rpar), 2)
@@ -520,7 +530,7 @@ plot.gmnl <- function(x, par = NULL, effect = c("ce", "wtp"), wrt = NULL,
     }
   } else {
     if (is.null(main)) main <- paste("95% Probability Intervals for ", par)
-    if(is.null(id)) id <- seq(1, 10, 1) 
+    if (is.null(id)) id <- seq(1, 10, 1) 
     if (is.null(ylab)) ylab <- "Individuals"
     f.bran <- effect.gmnl(x, par,  effect = effect, wrt =  wrt)$mean
     f.sran <- effect.gmnl(x, par,  effect = effect, wrt =  wrt)$sd.est
@@ -586,20 +596,20 @@ plot.gmnl <- function(x, par = NULL, effect = c("ce", "wtp"), wrt = NULL,
 #' }
 #' @export
 cov.gmnl <- function(x, Q = NULL){
-  if(!inherits(x, "gmnl")) stop("not a \"gmnl\" object")
+  if (!inherits(x, "gmnl")) stop("not a \"gmnl\" object")
   if (is.null(x$ranp)) stop('cov.gmnl only relevant for random coefficient model')
   model <- x$model
   if (!is.null(Q) & model != "mm") stop("Q is only relevant for MM-MNL model")
-  if (model == "mm"){
+  if (model == "mm") {
     if (is.null(Q)) stop("MM-MNL model requires Q")
     if (Q > x$Q) stop("Q is greater than the number of classes in the fitted model")
   }  
   beta.hat <- x$coefficients
   K  <- length(x$ranp)
   nr <- names(x$ranp)
-  if (x$correlation){
+  if (x$correlation) {
     names.stds <- c()
-    if (model == "mm"){
+    if (model == "mm") {
       for (i in 1:K) names.stds <- c(names.stds, paste('class', Q, 'sd', nr[i], nr[i:K], sep = '.'))
     } else {
       for (i in 1:K) names.stds <- c(names.stds, paste('sd', nr[i], nr[i:K], sep = '.'))
@@ -608,10 +618,10 @@ cov.gmnl <- function(x, Q = NULL){
     V    <- tcrossprod(makeL(v))
     colnames(V) <- rownames(V) <- nr
   } else{
-    names.stds <- if(model != "mm") paste("sd", nr, sep = ".") else paste("class", Q, "sd", nr, sep = ".")
+    names.stds <- if (model != "mm") paste("sd", nr, sep = ".") else paste("class", Q, "sd", nr, sep = ".")
     sv   <- beta.hat[names.stds]
     V    <- matrix(0, K, K)
-    diag(V) <- sv^2
+    diag(V) <- sv ^ 2
     colnames(V) <- rownames(V) <- nr
   }
   V
@@ -632,13 +642,14 @@ cor.gmnl <- function(x, Q = NULL){
 
 #' @rdname cov.gmnl
 #' @importFrom msm deltamethod
+#' @import stats
 #' @export
 se.cov.gmnl <- function(x, sd =  FALSE, Q = NULL, digits = max(3, getOption("digits") - 2)){
-  if(!inherits(x, "gmnl")) stop("not a \"gmnl\" object")
+  if (!inherits(x, "gmnl")) stop("not a \"gmnl\" object")
   if (!x$correlation) stop('se.cov.gmnl only relevant for correlated random coefficient')
   model <- x$model
   if (!is.null(Q) & model != "mm") stop("Q is only relevant for MM-MNL model")
-  if (model == "mm"){
+  if (model == "mm") {
     if (is.null(Q)) stop("MM-MNL model requires Q")
     if (Q > x$Q) stop("Q is greater than the number of classes in the fitted model")
   }  
@@ -646,7 +657,7 @@ se.cov.gmnl <- function(x, sd =  FALSE, Q = NULL, digits = max(3, getOption("dig
   Ka <- length(x$ranp)
   nr <- names(x$ranp)
   names.stds <- c()
-  if (model == "mm"){
+  if (model == "mm") {
     for (i in 1:Ka) names.stds <- c(names.stds, paste('class', Q, 'sd', nr[i], nr[i:Ka], sep = '.'))
   } else {
     for (i in 1:Ka) names.stds <- c(names.stds, paste('sd', nr[i], nr[i:Ka], sep = '.'))
@@ -654,15 +665,15 @@ se.cov.gmnl <- function(x, sd =  FALSE, Q = NULL, digits = max(3, getOption("dig
   stds.hat <- beta.hat[names.stds]
   sel.vcov <- vcov(x)[names.stds, names.stds]
   form <- c()
-  if (sd){
-    for (i in 1:Ka){
+  if (sd) {
+    for (i in 1:Ka) {
       k <- i
       if (i == 1) {
         form <- paste("~ sqrt(", c(form, paste(paste("x",  i, sep = ""), paste("x", k, sep = ""), sep = "*")), ")")
       } else {
         temp <- paste(paste("x",  i, sep = ""), paste("x", k, sep = ""), sep = "*")
         j <- 2
-        while(j <= i){
+        while(j <= i) {
           temp <- paste(temp, make.add(row = j, col = k, Ka = Ka)[1], sep = "+") 
           j <- j + 1
         }
@@ -672,13 +683,13 @@ se.cov.gmnl <- function(x, sd =  FALSE, Q = NULL, digits = max(3, getOption("dig
     b <- sqrt(diag(cov.gmnl(x, Q)))
     names(b) <- colnames(cov.gmnl(x, Q))
   } else {
-    for (i in 1:Ka){ 
+    for (i in 1:Ka) { 
       if (i == 1) {
         form <- paste("~", c(form, paste(paste("x",  i:Ka, sep = ""), paste("x", i, sep = ""), sep = "*")))
       } else {
         temp <- paste(paste("x",  i:Ka, sep = ""), paste("x", i, sep = ""), sep = "*")
         j <- 2
-        while(j <= i){
+        while(j <= i) {
           temp <- paste(temp, make.add(row = j, col = i, Ka = Ka), sep = "+") 
           j <- j + 1
         }
@@ -691,15 +702,16 @@ se.cov.gmnl <- function(x, sd =  FALSE, Q = NULL, digits = max(3, getOption("dig
     names(b) <- names.vcov
   }
   std.err <- c()
-  for (i in 1:length(form)){
+  for (i in 1:length(form)) {
     std.err <- c(std.err, msm::deltamethod(as.formula(form[i]), stds.hat, sel.vcov, ses =  TRUE))
   }  
   z <- b / std.err
   p <- 2 * (1 - pnorm(abs(z)))
   tableChol <- cbind(b, std.err, z, p)
-  if(!sd) cat(paste("\nElements of the variance-covariance matrix \n\n"))
+  if (!sd) cat(paste("\nElements of the variance-covariance matrix \n\n"))
   else cat(paste("\nStandard deviations of the random parameters \n\n"))
-  colnames(tableChol) <- c("Estimate", "Std. Error", "t-value", "Pr(>|t|)") 
+  #colnames(tableChol) <- c("Estimate", "Std. Error", "t-value", "Pr(>|t|)") 
+  colnames(tableChol) <- c("Estimate", "Std. Error", "z-value", "Pr(>|z|)") 
   printCoefmat(tableChol, digits =  digits)
 }
 
@@ -733,7 +745,7 @@ se.cov.gmnl <- function(x, sd =  FALSE, Q = NULL, digits = max(3, getOption("dig
 #' clogit <- gmnl(choice ~ pf + cl + loc + wk + tod + seas| 0,
 #'                data = Electr)
 #' wtp.gmnl(clogit, wrt = "pf")
-#'                 
+#' @import stats
 #' @references
 #' \itemize{
 #' \item Greene, W. H. (2012). Econometric Analysis, Seventh Edition. Pearson Hall.
@@ -746,15 +758,15 @@ wtp.gmnl <- function(object, wrt =  NULL, digits = max(3, getOption("digits") - 
   form <- c()
   b <- c()
   namesb <- names(beta.hat)[-c(posi)]
-  for (i in 1: length(beta.hat)){
-    if (i != posi){
+  for (i in 1:length(beta.hat)) {
+    if (i != posi) {
       b <- c(b, beta.hat[i]/ beta.hat[posi])
       form <- c(form, paste("~", "x", i, "/", "x", posi, sep = ""))
     }
   }
   names(b) <- namesb
   std.err <- c()
-  for (i in 1:length(form)){
+  for (i in 1:length(form)) {
     std.err <- c(std.err, msm::deltamethod(as.formula(form[i]), beta.hat, vcov(object), ses =  TRUE))
   }
   z <- b / std.err

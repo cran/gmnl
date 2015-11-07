@@ -358,6 +358,7 @@ ll.mixlog <- function(theta, y, X, Z = NULL, id = NULL, ranp, R,
 }
 
 ## Simulated Maximum Likelihood for GMNL model
+#' @import utils
 ll.gmlogit <- function(theta, y, X, H = NULL, id = NULL, ranp, R,
                        correlation, weights = NULL, hgamma = "direct", 
                        haltons =  NULL, seed = 12345, bound.err,
@@ -368,7 +369,7 @@ ll.gmlogit <- function(theta, y, X, H = NULL, id = NULL, ranp, R,
   J <- length(X)
   N <- nrow(X[[1]])
   panel <- !is.null(id)
-  if (panel){
+  if (panel) {
     n <- length(unique(id))
     if (length(weights) == 1) weights <- rep(weights, N)
   } 
@@ -779,6 +780,7 @@ ll.mnlogit <- function(theta, y, X, H, Q,
     attr(lnL, "prob.ind") <- Ln
     attr(lnL, "bi") <- bi
     attr(lnL, 'Qir') <- Qir
+    attr(lnL, 'Wnq') <- Wnq
   }
   lnL
 }

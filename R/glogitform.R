@@ -48,6 +48,7 @@ as.Formula.gFormula <- function(x, ...){
 }
 
 #' @rdname gFormula
+#' @import stats
 #' @export
 model.frame.gFormula <- function(formula, data, ..., lhs = NULL, rhs = NULL){
   if (is.null(rhs)) rhs <- 1:(length(formula)[2])
@@ -63,6 +64,7 @@ model.frame.gFormula <- function(formula, data, ..., lhs = NULL, rhs = NULL){
 }
 
 #' @rdname gFormula
+#' @import stats
 #' @export
 model.matrix.gFormula <- function(object, data, rhs = NULL, Q = NULL, ...){
   K <- length(data) # Number of parameters
@@ -72,38 +74,38 @@ model.matrix.gFormula <- function(object, data, rhs = NULL, Q = NULL, ...){
   data$alt <- alt
   resp.name <- as.character(attr(object, "lhs"))
   
-  if (is.null(rhs)){
+  if (is.null(rhs)) {
     has.int <- has.intercept(object)
     if (has.int) intercept.char <- "alt" else intercept.char <- NULL
     
     ## for ind.spec : remove any 0 or 1 or -1 in the formula and get the
     ## list of the variables
     
-    if (length(object)[2] > 1){
+    if (length(object)[2] > 1) {
       ind.spec <- formula(object, rhs = 2, lhs = 0) # individual specific variables
-      if (!has.int) ind.spec <- update(ind.spec, ~ . + 1)
-      ind.spec <- update(ind.spec, ~ .)
+      if (!has.int) ind.spec <- update(ind.spec, ~. + 1)
+      ind.spec <- update(ind.spec, ~.)
       ind.spec.char <- as.character(ind.spec)[2]
       if (ind.spec.char == "1") ind.spec.char <- ind.spec.var <- NULL
       else {
         ind.spec.var <- colnames(model.matrix(update(ind.spec, ~. + 1), data))[-1]
-        ind.spec.char <- paste("(", ind.spec.char, "):alt", sep="")
+        ind.spec.char <- paste("(", ind.spec.char, "):alt", sep = "")
       }
     }
     else ind.spec <- ind.spec.char <- ind.spec.var <- NULL
     
     # alternative specific variables
     alt.spec <- formula(object, rhs = 1, lhs = 0)
-    alt.spec <- update(update(alt.spec, ~ . + 1), ~ .)
+    alt.spec <- update(update(alt.spec, ~. + 1), ~.)
     alt.spec.char <- as.character(alt.spec)[2]
     if (alt.spec.char == "1") als.spec <- alt.spec.char <- NULL
     
     # specific coefficient for alternative specific variables
-    if (length(object)[2] > 2){
+    if (length(object)[2] > 2) {
       coef.spec <- formula(object, rhs = 3, lhs = 0)
-      coef.spec <- update(update(coef.spec, ~ . + 1), ~ .)
+      coef.spec <- update(update(coef.spec, ~. + 1), ~.)
       coef.spec.char <- as.character(coef.spec)[2]
-      if (!is.null(coef.spec.char)) coef.spec.char <- paste("(", coef.spec.char, "):alt", sep="")
+      if (!is.null(coef.spec.char)) coef.spec.char <- paste("(", coef.spec.char, "):alt", sep = "")
     }
     else coef.spec <- coef.spec.char <- NULL
     form.char <- paste(c(intercept.char, alt.spec.char,
@@ -124,22 +126,22 @@ model.matrix.gFormula <- function(object, data, rhs = NULL, Q = NULL, ...){
     namesX <- colnames(X)
     for (i in 1:length(namesX)) namesX[i] <- sub('alt', '', namesX[i])
     z <- match(levels(alt), namesX)
-    namesX[na.omit(z)] <- paste(levels(alt)[!is.na(z)], '(intercept)', sep=":")
+    namesX[na.omit(z)] <- paste(levels(alt)[!is.na(z)], '(intercept)', sep = ":")
     colnames(X) <- namesX
   } else {
     if (rhs < 4) stop("rhs should be greater than 3")
     id <- index[["id"]]
-    if (is.null(id)){
+    if (is.null(id)) {
       indata <- data[!duplicated(chid), ]
     } else {
       indata <- data[!duplicated(id), ]
     }
-    if (is.null(Q)){
+    if (is.null(Q)) {
       ind.var <- formula(object, rhs = rhs, lhs = 0)
       X <- model.matrix(ind.var, indata)
     } else {
       cldata   <- indata[rep(seq_len(nrow(indata)), each = Q), ] # expand data Q times
-      if (is.null(id)){
+      if (is.null(id)) {
         chid.un <- unique(chid)
         class   <- factor(rep(1:Q, length(chid.un)))
       } else {
@@ -154,13 +156,13 @@ model.matrix.gFormula <- function(object, data, rhs = NULL, Q = NULL, ...){
       has.int <- has.intercept(class.var)
       if (has.int) intercept.char <- "factor(class)" else intercept.char <- NULL 
       if (!has.int) {
-        class.var <- update(class.var, ~ . + 1)
-        class.var<- update(class.var, ~ .)
+        class.var <- update(class.var, ~. + 1)
+        class.var<- update(class.var, ~.)
         class.var.char <- as.character(class.var)[2]
         if (class.var.char == "1") class.var.char <- class.var.var <- NULL
       } else {
          has.xclass <- as.character(class.var)[2]
-        if (has.xclass == "1"){
+        if (has.xclass == "1") {
           class.var.char <- NULL
         } else {
           class.var.var <- colnames(model.matrix(update(class.var, ~. + 1), cldata))[-1]
@@ -173,7 +175,7 @@ model.matrix.gFormula <- function(object, data, rhs = NULL, Q = NULL, ...){
       
       lev1 <- levels(class)[1]
       lev1 <- paste("class", lev1, sep = "")
-      if (has.xclass != "1"){
+      if (has.xclass != "1") {
         toremove <- unlist(lapply(as.list(class.var.var), function(x) paste(lev1, x, sep = ":")))
         revtoremove <- unlist(lapply(as.list(class.var.var), function(x) paste(x, lev1, sep = ":")))
         toremove <- colnames(X) %in% c(toremove, revtoremove)
@@ -193,14 +195,17 @@ has.intercept <- function(object, ...) {
   UseMethod("has.intercept")
 }
 
+#' @import stats
 has.intercept.default <- function(object, ...) {
   has.intercept(formula(object), ...)
 }
 
+#' @import stats
 has.intercept.formula <- function(object, ...) {
   attr(terms(object), "intercept") == 1L
 }
 
+#' @import stats
 has.intercept.Formula <- function(object, rhs = NULL, ...) {
   if (is.null(rhs)) rhs <- 1:length(attr(object, "rhs"))
   sapply(rhs, function(x) has.intercept(formula(object, lhs = 0, rhs = x)))

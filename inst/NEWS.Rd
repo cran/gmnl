@@ -2,6 +2,15 @@
 \title{gmnl News}
 \encoding{UTF-8}
 
+\section{CHANGES IN VERSION 1.1.1}{
+  \subsection{FIXED BUGS}{
+    \itemize{
+      \item Fixed bug when the data of mlogit class has an id.var, but the model is estimated as a cross-section. Thanks to Maryam Zabihi (maryam.zabihi@mavs.uta.edu) for pointing this out. 
+    }
+  }
+}
+
+
 \section{CHANGES IN VERSION 1.1}{
   \subsection{FIXED BUGS}{
     \itemize{
