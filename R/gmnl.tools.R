@@ -19,7 +19,7 @@ repCols <- function(x, n){
 
 make.add <- function(row, col, Ka){
   sa <- makeL(1:rep(0.5 * Ka * (Ka + 1)))
-  for (k in row:col){ 
+  for (k in row:col) { 
     cb <- sa[k, row]
     form <- paste(paste("x",  cb:(cb + (Ka - k)), sep = ""), paste("x", cb, sep = ""), sep = "*")
   }
@@ -30,5 +30,6 @@ make.add <- function(row, col, Ka){
 repmat <- function(x, dimen){
   kronecker(array(1, dim = dimen), x)
 }
+
 
 

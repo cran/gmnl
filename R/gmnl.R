@@ -173,7 +173,8 @@ gmnl <- function(formula, data, subset, weights, na.action,
                  seed = 12345, correlation = FALSE, bound.err = 2, panel = FALSE,
                  hgamma = c("direct", "indirect"), reflevel = NULL, 
                  init.tau = 0.1, init.gamma = 0.1, notscale = NULL, print.init = FALSE, 
-                 gradient = TRUE, typeR = TRUE, ...){
+                 gradient = TRUE, typeR = TRUE, ...)
+{
   ####################
   # 1) Check arguments
   ####################
@@ -215,7 +216,7 @@ gmnl <- function(formula, data, subset, weights, na.action,
   ## Indeces
   index <- attr(mf, "index")
   alt   <- index[["alt"]]
-  chid  <- index[["chid"]]
+  #chid  <- index[["chid"]]
   alt.lev <- levels(alt)
   J <- length(alt.lev)
   
@@ -239,13 +240,15 @@ gmnl <- function(formula, data, subset, weights, na.action,
   
   ## Check variables for the mean and/or heterogeneity
   has.mvar <- has.othervar(formula, 4)
-  if (has.mvar){
-    if (model == "mnl" || model == "smnl") stop(paste("Variables for mean are not relevant for", paste(model, collapse = ": ")))
+  if (has.mvar) {
+    if (model == "mnl" || model == "smnl") stop(paste("Variables for mean are not relevant for", 
+                                                      paste(model, collapse = ": ")))
     if (is.null(mvar))  stop("mvar is null")
     if (!is.list(mvar)) stop("mvar is not a list")
     rvar <- names(mvar)[!(names(mvar) %in% names(ranp))]
     if (length(rvar) > 0) {
-      udstr <- paste("The following variables are not specified in the argument ranp:", paste(unique(rvar), collapse = ", "))
+      udstr <- paste("The following variables are not specified in the argument ranp:", 
+                     paste(unique(rvar), collapse = ", "))
       stop(udstr)
     }
     Z <- model.matrix(formula, mf, rhs = 4) 
@@ -260,14 +263,19 @@ gmnl <- function(formula, data, subset, weights, na.action,
   
   has.het <- has.othervar(formula, 5)
   if ((model == "lc" || model == "mm") && !has.het) stop("lc needs variables for class probabilities")
-  if (has.het){
-    if (model == "mnl" || model == "mixl") stop(paste("variables for scale are not relevant for", paste(model, collapse = ": ")))
-    if (model == "lc" || model == "mm") H <- model.matrix(formula, mf, rhs = 5, Q = Q) else H <- model.matrix(formula, mf, rhs = 5) 
+  if (has.het) {
+    if (model == "mnl" || model == "mixl") stop(paste("variables for scale are not relevant for", 
+                                                      paste(model, collapse = ": ")))
+    if (model == "lc" || model == "mm") {
+      H <- model.matrix(formula, mf, rhs = 5, Q = Q)
+    } else {
+      H <- model.matrix(formula, mf, rhs = 5) 
+    }
   } else H <- NULL
   
   # Weights
   if (any(names(mf) == "(weights)")) {
-    weights <- mf[["(weights)"]] <- mf[["(weights)"]]/mean(mf[["(weights)"]])
+    weights <- mf[["(weights)"]] <- mf[["(weights)"]] / mean(mf[["(weights)"]])
     weights <- split(weights, alt)[[1]]
   } else weights <- NULL
   
@@ -292,7 +300,7 @@ gmnl <- function(formula, data, subset, weights, na.action,
   
   ## Standard deviation of random parameters
   names.stds <- start.stds <- c()
-  if(has.rand) {
+  if (has.rand) {
     if (!correlation) {
       ndist <- ranp[!(ranp %in% c("cn", "ln", "n", "u", "t", "sb"))]
       if (length(ndist) > 0) {
@@ -415,6 +423,7 @@ gmnl <- function(formula, data, subset, weights, na.action,
       calls$y <- as.name('yl')
       calls$logLik <- as.name('ll.mlogit')
       mean <- coef(eval(calls, sys.frame(which = nframe)))
+      #mean <- coef(eval(calls,parent.frame()))
       if (model == "lc" || model == "mm") {
         lc.mean <- c()
         init.shift <- seq(-0.02, 0.02, length.out = Q)
@@ -425,7 +434,7 @@ gmnl <- function(formula, data, subset, weights, na.action,
       if (model  == "mm") {
         ls.mean <- c()
         init.shift <- seq(-0.02, 0.02, length.out = Q)
-        for(i in 1:Q) {
+        for (i in 1:Q) {
           ls.mean <- c(ls.mean, start.stds + init.shift[i])
         }
       }
@@ -446,7 +455,7 @@ gmnl <- function(formula, data, subset, weights, na.action,
       wns <- names(notscale[notscale == 1])
       cat("\nThe following variables are not scaled:\n")
       print(wns)
-    } else{
+    } else {
       notscale <- rep(0, ncol(X))
       names(notscale) <- mean.names
     }
@@ -476,7 +485,8 @@ gmnl <- function(formula, data, subset, weights, na.action,
         theta[sb.names] <- log(theta[sb.names])
       }
     }
-  }  
+  }
+  
   if (print.init) {
     cat("\nStarting Values:\n")
     print(theta)
@@ -545,6 +555,7 @@ gmnl <- function(formula, data, subset, weights, na.action,
            as.name('Q'))
   }
   x <- eval(opt, sys.frame(which = nframe))
+  #x <- eval(opt, parent.frame())
   actpar <- activePar(x)
   ###################################
   # 6) Extract predicted probabilities, 
@@ -578,8 +589,10 @@ gmnl <- function(formula, data, subset, weights, na.action,
     }
     opt[[2]] <- betahat
     again <- eval(opt, sys.frame(which = nframe))
+    #again <- eval(opt, parent.frame())
     bi  <- attr(again, 'bi')
     Qir <- attr(again, 'Qir')
+    Wnq <- attr(again, 'Wnq')
     x$estimate      <- betahat
   } else {
     opt$hessian <- FALSE
@@ -587,8 +600,10 @@ gmnl <- function(formula, data, subset, weights, na.action,
     names(opt)[[2]] <- 'theta'
     opt[[2]] <- betahat
     again <- eval(opt, sys.frame(which = nframe))
+    #again <- eval(opt, parent.frame())
     bi <- NULL
     Qir <- NULL
+    Wnq <- NULL
   }
   prob.alt <- attr(again, 'prob.alt')
   prob.ind <- attr(again, 'prob.ind')
@@ -604,7 +619,7 @@ gmnl <- function(formula, data, subset, weights, na.action,
   logLik <- structure(list(
                           maximum     = logLik(x),
                           gradient    = x$gradient[actpar],
-                          nobs        = nrow(X)/J,
+                          nobs        = nrow(X) / J,
                           gradientObs = gradientObs,
                           hessian     = hessian(x)[actpar, actpar],
                           iterations  = nIter(x),
@@ -635,8 +650,9 @@ gmnl <- function(formula, data, subset, weights, na.action,
                         Qir           = Qir,
                         notscale      = notscale,
                         Q             = Q, 
+                        Wnq           = Wnq,
                         call          = callT),
                       class = 'gmnl'
                     )
-  result
+  return(result)
 }

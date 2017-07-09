@@ -23,14 +23,14 @@ print.gmnl <- function(x, digits = max(3, getOption("digits") - 3),
 #' @import stats
 #' @export
 summary.gmnl <- function(object,...){
-  b <- object$coefficients
+  b       <- object$coefficients
   std.err <- sqrt(diag(vcov(object)))
-  z <- b / std.err
-  p <- 2 * (1 - pnorm(abs(z)))
-  CoefTable <- cbind(b, std.err, z, p)
+  z       <- b / std.err
+  p       <- 2 * (1 - pnorm(abs(z)))
+  CoefTable           <- cbind(b, std.err, z, p)
   colnames(CoefTable) <- c("Estimate", "Std. Error", "z-value", "Pr(>|z|)")
   object$CoefTable    <- CoefTable
-  class(object) <- c("summary.gmnl", "gmnl")
+  class(object)       <- c("summary.gmnl", "gmnl")
   return(object)
 }
 
@@ -172,7 +172,7 @@ df.residual.gmnl <- function(object, ...){
 fitted.gmnl <- function(object, outcome = TRUE, ...){
   if (outcome) result <- object$prob.ind
   else result <- object$prob.alt
-  result
+  return(result)
 }
 
 #' @rdname gmnl
@@ -624,7 +624,7 @@ cov.gmnl <- function(x, Q = NULL){
     diag(V) <- sv ^ 2
     colnames(V) <- rownames(V) <- nr
   }
-  V
+  return(V)
 }
 
 #' @rdname cov.gmnl
@@ -636,7 +636,7 @@ cor.gmnl <- function(x, Q = NULL){
   D   <- diag(sqrt(diag(V)))
   Rho <- solve(D) %*% V %*% solve(D)
   colnames(Rho) <- rownames(Rho) <- nr
-  Rho
+  return(Rho)
 }
 
 
@@ -673,7 +673,7 @@ se.cov.gmnl <- function(x, sd =  FALSE, Q = NULL, digits = max(3, getOption("dig
       } else {
         temp <- paste(paste("x",  i, sep = ""), paste("x", k, sep = ""), sep = "*")
         j <- 2
-        while(j <= i) {
+        while (j <= i) {
           temp <- paste(temp, make.add(row = j, col = k, Ka = Ka)[1], sep = "+") 
           j <- j + 1
         }
@@ -689,7 +689,7 @@ se.cov.gmnl <- function(x, sd =  FALSE, Q = NULL, digits = max(3, getOption("dig
       } else {
         temp <- paste(paste("x",  i:Ka, sep = ""), paste("x", i, sep = ""), sep = "*")
         j <- 2
-        while(j <= i) {
+        while (j <= i) {
           temp <- paste(temp, make.add(row = j, col = i, Ka = Ka), sep = "+") 
           j <- j + 1
         }

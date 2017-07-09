@@ -2,8 +2,26 @@
 \title{gmnl News}
 \encoding{UTF-8}
 
-\section{CHANGES IN VERSION 1.1.1}{
+
+\section{CHANGES IN VERSION 1.1-3}{
+  \subsection{NEW FEATURES}{
+    \itemize{
+      \item CITATION in now included.
+    }
+  }
+}
+
+\section{CHANGES IN VERSION 1.1-2}{
   \subsection{FIXED BUGS}{
+    \itemize{
+      \item The predicted probabilities for each individual in each class are now accesibles through the element Wnq. 
+    }
+  }
+}
+
+
+\section{CHANGES IN VERSION 1.1.1}{
+  \subsection{NEW FEATURES}{
     \itemize{
       \item Fixed bug when the data of mlogit class has an id.var, but the model is estimated as a cross-section. Thanks to Maryam Zabihi (maryam.zabihi@mavs.uta.edu) for pointing this out. 
     }
