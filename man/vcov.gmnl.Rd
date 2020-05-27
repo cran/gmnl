@@ -4,9 +4,15 @@
 \alias{vcov.gmnl}
 \title{vcov method for gmnl objects}
 \usage{
-\method{vcov}{gmnl}(object, what = c("coefficient", "ranp"), type = c("cov",
-  "cor", "sd"), se = FALSE, Q = NULL, digits = max(3, getOption("digits")
-  - 2), ...)
+\method{vcov}{gmnl}(
+  object,
+  what = c("coefficient", "ranp"),
+  type = c("cov", "cor", "sd"),
+  se = FALSE,
+  Q = NULL,
+  digits = max(3, getOption("digits") - 2),
+  ...
+)
 }
 \arguments{
 \item{object}{a fitted model of class \code{gmnl},}
@@ -32,4 +38,3 @@ This new interface replaces the \code{cor.gmnl}, \code{cov.gmnl} and \code{se.co
 \seealso{
 \code{\link[gmnl]{gmnl}} for the estimation of multinomial logit models with random parameters.
 }
-

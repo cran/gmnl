@@ -255,7 +255,8 @@ gmnl <- function(formula, data, subset, weights, na.action,
     for (i in 1:length(mvar)) {
       rvar <- mvar[[i]][!(mvar[[i]] %in% colnames(Z))]
       if (length(rvar) > 0) {
-        udstr <- paste("The following variables are not specified in the formula: ", paste(unique(rvar), collapse = ", "))
+        udstr <- paste("The following variables are not specified in the formula: ", 
+                       paste(unique(rvar), collapse = ", "))
         stop(udstr)
       }
     }
@@ -500,7 +501,8 @@ gmnl <- function(formula, data, subset, weights, na.action,
   
   ## Maximization control arguments
   m <- match(c('method', 'print.level', 'iterlim',
-               'start','tol', 'ftol', 'steptol', 'fixed', 'constraints'),
+               'start','tol', 'ftol', 'steptol', 'fixed', 'constraints', 
+               'control'),
              names(opt), 0L)
   opt <- opt[c(1L, m)]
   

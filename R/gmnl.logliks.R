@@ -579,11 +579,10 @@ ll.mlogitlc <- function(theta, y, X, H, Q, id = NULL, weights = NULL,
   if (panel) if (length(weights) == 1) weights <- rep(weights, N)
   
   beta  <- matrix(theta[1L:(K * Q)], nrow = K, ncol = Q)
-  rownames(beta) <- colnames(X[[1]]); colnames(beta) <- paste("class", 1:Q, sep = ':')
+  rownames(beta) <- colnames(X[[1]]) 
+  colnames(beta) <- paste("class", 1:Q, sep = ':')
   gamma <- theta[-c(1L:(K * Q))]
     
-  if (get.bi) bi <- t(beta)
-  
   # Make weigths
   ew <- lapply(H, function(x) exp(crossprod(t(x), gamma)))
   sew <- suml(ew)
@@ -603,7 +602,6 @@ ll.mlogitlc <- function(theta, y, X, H, Q, id = NULL, weights = NULL,
   if (panel) Pnq <- apply(Pnq, 2, tapply, id, prod)
   WPnq <- Wnq * Pnq # N * Q
   Ln   <- apply(WPnq, 1, sum)
-  if (get.bi)  Qnr  <-  WPnq / Ln
   lnL <- if (panel) sum(log(Ln) * weights[!duplicated(id)]) else sum(log(Ln) * weights)
   
   
@@ -631,13 +629,13 @@ ll.mlogitlc <- function(theta, y, X, H, Q, id = NULL, weights = NULL,
     attr(lnL, "gradient") <- gari * weights
   }
   if (get.bi) {
-    attr(lnL, 'Wnq') <- Wnq
+    attr(lnL, 'Wnq') <- Wnq #Unconditional class-assignment N*Q
     if (panel) Wnq <- Wnq[id, ]
     Pw <- lapply(Pnjq, function(x) x * Wnq)
     attr(lnL, "prob.alt") <- sapply(Pw, function(x) apply(x, 1, sum))
     attr(lnL, "prob.ind") <- Ln
-    attr(lnL, "bi") <- bi
-    attr(lnL, 'Qir') <- Qnr # WPnq / Ln
+    attr(lnL, "bi") <- t(beta)
+    attr(lnL, 'Qir') <- WPnq / Ln #Conditional class-assignment N*Q
   }
   lnL 
 }

@@ -54,7 +54,25 @@ model.frame.gFormula <- function(formula, data, ..., lhs = NULL, rhs = NULL){
   if (is.null(rhs)) rhs <- 1:(length(formula)[2])
   if (is.null(lhs)) lhs <- ifelse(length(formula)[1] > 0, 1, 0)
   mf <- model.frame(as.Formula(formula), as.data.frame(data), ..., rhs = rhs)
-  index <- attr(data, "index")
+  #YC START
+  if (inherits(data, "dfidx")) {
+    index <- data[[which(sapply(data, function(x) inherits(x, "idx")))]]
+    if (length(index) == 3) {
+      names(index) <- c("chid", "id", "alt")
+      if (!is.factor(index$chid)) index$chid <- factor(index$chid)
+      if (!is.factor(index$alt)) index$alt <- factor(index$alt)
+      if (!is.factor(index$id)) index$id <- factor(index$id)
+    }
+    else{
+      names(index) <- c("chid", "alt")
+      if (!is.factor(index$chid)) index$chid <- factor(index$chid)
+      if (!is.factor(index$alt)) index$alt <- factor(index$alt)
+    }
+  }
+  else   index <- attr(data, "index")
+  #YC END
+  
+  #  index <- attr(data, "index")
   index <- index[rownames(mf), ]
   index <- data.frame(lapply(index , function(x) x[drop = TRUE]), rownames(index))
   structure(mf,

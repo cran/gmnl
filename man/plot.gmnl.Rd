@@ -4,10 +4,22 @@
 \alias{plot.gmnl}
 \title{Plot of the Distribution of the Conditional Expectation of Random Parameters}
 \usage{
-\method{plot}{gmnl}(x, par = NULL, effect = c("ce", "wtp"), wrt = NULL,
-  type = c("density", "histogram"), adjust = 1, main = NULL,
-  col = "indianred1", breaks = 10, ylab = NULL, xlab = NULL,
-  ind = FALSE, id = NULL, ...)
+\method{plot}{gmnl}(
+  x,
+  par = NULL,
+  effect = c("ce", "wtp"),
+  wrt = NULL,
+  type = c("density", "histogram"),
+  adjust = 1,
+  main = NULL,
+  col = "indianred1",
+  breaks = 10,
+  ylab = NULL,
+  xlab = NULL,
+  ind = FALSE,
+  id = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{an object of class \code{gmnl}.}
@@ -68,9 +80,6 @@ plot(Elec.cor, par = "loc", effect = "ce", ind = TRUE, id = 1:30)
 plot(Elec.cor, par = "loc", effect = "wtp", wrt = "pf")                  
 } 
 }
-\author{
-Mauricio Sarrias
-}
 \references{
 \itemize{
 \item Greene, W. H. (2012). Econometric Analysis, Seventh Edition. Pearson Hall.
@@ -80,4 +89,6 @@ Mauricio Sarrias
 \seealso{
 \code{\link[gmnl]{gmnl}} for the estimation of different multinomial models with individual heterogeneity and \code{\link[gmnl]{effect.gmnl}}.
 }
-
+\author{
+Mauricio Sarrias
+}

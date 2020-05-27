@@ -2,6 +2,15 @@
 \title{gmnl News}
 \encoding{UTF-8}
 
+\section{CHANGES IN VERSION 1.1-3.2}{
+  \subsection{NEW FEATURES}{
+    \itemize{
+      \item More arguments are passed on to maxLik.
+      \item Fixed bug with weights.
+      \item Correcting dependency with mlogit
+    }
+  }
+}
 
 \section{CHANGES IN VERSION 1.1-3}{
   \subsection{NEW FEATURES}{

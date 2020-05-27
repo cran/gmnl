@@ -36,4 +36,3 @@ specific and individual specific variables; variables for the mean of the random
 for the scale function. \code{gFormula} deals with this type of models using suitable methods to extract
 the elements of the model.
 }
-

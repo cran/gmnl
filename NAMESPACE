@@ -35,7 +35,3 @@ import(utils)
 importFrom(mlogit,mlogit.data)
 importFrom(msm,deltamethod)
 importFrom(plotrix,plotCI)
-
-if(getRversion() >= "3.6.0") {
-    S3method(memisc::getSummary, "gmnl")
-}

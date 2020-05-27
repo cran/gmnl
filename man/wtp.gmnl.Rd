@@ -41,9 +41,6 @@ clogit <- gmnl(choice ~ pf + cl + loc + wk + tod + seas| 0,
                data = Electr)
 wtp.gmnl(clogit, wrt = "pf")
 }
-\author{
-Mauricio Sarrias.
-}
 \references{
 \itemize{
 \item Greene, W. H. (2012). Econometric Analysis, Seventh Edition. Pearson Hall.
@@ -53,4 +50,6 @@ Mauricio Sarrias.
 \seealso{
 \code{\link[msm]{deltamethod}} for the estimation of the standard errors.
 }
-
+\author{
+Mauricio Sarrias.
+}

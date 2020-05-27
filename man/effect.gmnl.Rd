@@ -51,9 +51,6 @@ summary(wtp.travel$mean)
 summary(wtp.travel$sd.est)
 } 
 }
-\author{
-Mauricio Sarrias.
-}
 \references{
 \itemize{
 \item Greene, W. H. (2012). Econometric Analysis, Seventh Edition. Pearson Hall.
@@ -63,4 +60,6 @@ Mauricio Sarrias.
 \seealso{
 \code{\link[gmnl]{gmnl}} for the estimation of multinomial Logit models with individual parameters.
 }
-
+\author{
+Mauricio Sarrias.
+}

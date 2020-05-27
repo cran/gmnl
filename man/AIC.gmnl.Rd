@@ -42,4 +42,3 @@ BIC(mnl)
 \seealso{
 \code{\link[gmnl]{gmnl}} for the estimation of multinomial logit models with observed and unobserved individual heterogeneity.
 }
-
