@@ -22,7 +22,7 @@
 #' @param mvar only valid if \code{ranp} is not \code{NULL}. This is a named list, where the names correspond to the variables with random parameters, and the values correspond to the variables that enter in the mean of each random parameters.
 #' @param seed seed for the random number generator. Default is \code{seed = 12345}.
 #' @param correlation only relevant if \code{ranp} is not \code{NULL}. If true, the correlation across random parameters is taken into account.
-#' @param bound.err only relevenat if model is \code{smnl} or \code{gmnl}. It indicates at which values the draws for the scale parameter are truncated. By default \code{bound.err = 2}, therefore a truncated normal distribution with truncation at -2 and +2 is used.
+#' @param bound.err only relevant if model is \code{smnl} or \code{gmnl}. It indicates at which values the draws for the scale parameter are truncated. By default \code{bound.err = 2}, therefore a truncated normal distribution with truncation at -2 and +2 is used.
 #' @param panel if \code{TRUE} a panel data model is estimated.
 #' @param hgamma a string indicated how to estimate the parameter gamma. If "\code{direct}", then \eqn{\gamma} is estimated directly, if "\code{indirect}" then \eqn{\gamma ^*} is estimated, where \eqn{\gamma = \exp(\gamma^*)/(1 + \exp(\gamma^*))}.
 #' @param reflevel the base alternative.
